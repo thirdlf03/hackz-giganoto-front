@@ -8,12 +8,9 @@ interface ChannelListProps {
   currentChannelId: string | null
   onChannelSelect: (channelId: string) => void
   voiceChannelSelect: (channelId: string) => void
-  isScreenSharing: boolean
-  startScreenShare: () => Promise<void>
-  stopScreenShare: () => void
 }
 
-const ChannelList: React.FC<ChannelListProps> = ({ server, currentChannelId, onChannelSelect, voiceChannelSelect, isScreenSharing, startScreenShare, stopScreenShare }) => {
+const ChannelList: React.FC<ChannelListProps> = ({ server, currentChannelId, onChannelSelect, voiceChannelSelect }) => {
   if (!server) {
     return (
       <div className="channel-list">

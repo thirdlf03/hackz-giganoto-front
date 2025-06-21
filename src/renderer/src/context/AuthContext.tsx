@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react'
+import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react'
 import { AuthState, User } from '../types'
 import axios from 'axios'
 
@@ -33,45 +33,61 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const [currentUser, setCurrentUser] = useState<User | null>(null)
 
-    const login = useCallback(async () => {
+  useEffect(() => {
+    const restoreAuth = async () => {
+      try {
+        const isEncryptionAvailable = await window.api.safeStorage.isAvailable()
+        let token = null
+        
+        if (isEncryptionAvailable) {
+          const encryptedToken = localStorage.getItem('encryptedAccessToken')
+          if (encryptedToken) {
+            token = await window.api.safeStorage.decrypt(encryptedToken)
+          }
+        } else {
+          token = localStorage.getItem('accessToken')
+        }
+        
+        if (token) {
+          setAuth(prev => ({
+            ...prev,
+            isAuthenticated: true,
+            accessToken: token
+          }))
+        }
+      } catch (error) {
+        console.error('トークン復元エラー:', error)
+      }
+    }
+    
+    restoreAuth()
+  }, [])
+
+  const login = useCallback(async () => {
     try {
       setAuth(prev => ({ ...prev, isLoading: true, error: null }))
 
       const response = await axios.get("http://localhost:9000/auth/github")
       const { auth_url, status } = response.data
-      console.log(auth_url)
-      console.log(status)
 
-      // 認証コールバックのリスナーを設定
-      const handleAuthCallback = async (_: any, callbackData: { code: string, state: string }) => {
+
+      const handleAuthCallback = async (_: any, callbackData: { access_token: string, token_type: string, expires_in: number, user_id: string }) => {
         try {
           console.log('認証コールバック受信:', callbackData)
-          
-          // バックエンドにcodeを送信してアクセストークンを取得
-          const tokenResponse = await axios.post("http://localhost:9000/auth/github/callback", {
-            code: callbackData.code,
-            state: callbackData.state
-          })
-          
-          const { access_token: oauthToken, user } = tokenResponse.data
 
-          // safeStorageを使用してアクセストークンを暗号化して保存
           const isEncryptionAvailable = await window.api.safeStorage.isAvailable()
           let storedToken: string
           
           if (isEncryptionAvailable) {
-            storedToken = await window.api.safeStorage.encrypt(oauthToken)
+            storedToken = await window.api.safeStorage.encrypt(callbackData.access_token)
             localStorage.setItem('encryptedAccessToken', storedToken)
           } else {
-            // 暗号化が利用できない場合（開発環境など）
-            storedToken = oauthToken
+
+            storedToken = callbackData.access_token
             localStorage.setItem('accessToken', storedToken)
           }
 
           // ユーザー情報を設定
-          if (user) {
-            setCurrentUser(user)
-          }
 
           setAuth({
             isAuthenticated: true,
@@ -80,11 +96,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             error: null
           })
 
-          // リスナーをクリーンアップ
           window.api.removeAuthListeners()
           
         } catch (error) {
-          console.error('トークン取得エラー:', error)
+          
           setAuth(prev => ({
             ...prev,
             isLoading: false,
@@ -94,20 +109,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       }
 
-      const handleAuthWindowClosed = () => {
-        setAuth(prev => ({
-          ...prev,
-          isLoading: false,
-          error: '認証がキャンセルされました'
-        }))
-        window.api.removeAuthListeners()
-      }
 
-      // イベントリスナーを設定
+
+      // // イベントリスナーを設定
       window.api.onAuthCallback(handleAuthCallback)
-      window.api.onAuthWindowClosed(handleAuthWindowClosed)
 
-      // 認証ウィンドウを開く
+      // // 認証ウィンドウを開く
       await window.api.openAuthWindow(auth_url)
 
     } catch (error) {

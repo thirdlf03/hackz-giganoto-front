@@ -24,9 +24,6 @@ const DiscordApp: React.FC = () => {
     setCurrentChannel,
     sendMessage,
     joinVoiceChannel,
-    isScreenSharing,
-    startScreenShare,
-    stopScreenShare,
     isWatchingScreen,
     screenVideoStream,
     stopWatchingScreen,
@@ -62,9 +59,6 @@ const DiscordApp: React.FC = () => {
           currentChannelId={currentChannelId}
           onChannelSelect={setCurrentChannel}
           voiceChannelSelect={joinVoiceChannel}
-          isScreenSharing={isScreenSharing}
-          startScreenShare={startScreenShare}
-          stopScreenShare={stopScreenShare}
         />
         {currentVoiceChannelId && (
           <VoiceMembers 
