@@ -2,9 +2,8 @@ import React, { createContext, useContext, useState, useCallback, ReactNode, use
 import { AppContextType, Server, User } from '../types'
 import { mockServers, mockUsers } from '../data/mockData'
 import { AuthProvider, useAuthContext } from './AuthContext'
-import { VoiceProvider, useVoiceContext } from './VoiceContext'
+import { MediaProvider, useMediaContext } from './MediaContext'
 import { MessagingProvider, useMessagingContext } from './MessagingContext'
-import { ScreenShareProvider, useScreenShareContext } from './ScreenShareContext'
 import { io } from 'socket.io-client'
 import * as mediasoupClient from 'mediasoup-client'
 
@@ -46,16 +45,15 @@ const AppProviderInner: React.FC<AppProviderInnerProps> = ({
   sfuSocket
 }) => {
   const authContext = useAuthContext()
-  const voiceContext = useVoiceContext()
+  const mediaContext = useMediaContext()
   const messagingContext = useMessagingContext()
-  const screenShareContext = useScreenShareContext()
 
   const contextValue: AppContextType = {
     currentUser: authContext.currentUser,
     servers,
     currentServerId,
     currentChannelId,
-    currentVoiceChannelId: voiceContext.currentVoiceChannelId,
+    currentVoiceChannelId: mediaContext.currentVoiceChannelId,
     messages: messagingContext.messages,
     users,
     setCurrentServer,
@@ -63,24 +61,24 @@ const AppProviderInner: React.FC<AppProviderInnerProps> = ({
     sendMessage: messagingContext.sendMessage,
     editMessage: messagingContext.editMessage,
     deleteMessage: messagingContext.deleteMessage,
-    joinVoiceChannel: voiceContext.joinVoiceChannel,
-    leaveVoiceChannel: voiceContext.leaveVoiceChannel,
-    isMuted: voiceContext.isMuted,
-    toggleMute: voiceContext.toggleMute,
-    muteVoiceChannel: voiceContext.muteVoiceChannel,
-    unmuteVoiceChannel: voiceContext.unmuteVoiceChannel,
-    isScreenSharing: screenShareContext.isScreenSharing,
-    startScreenShare: screenShareContext.startScreenShare,
-    stopScreenShare: screenShareContext.stopScreenShare,
-    isWatchingScreen: screenShareContext.isWatchingScreen,
-    screenVideoStream: screenShareContext.screenVideoStream,
-    startWatchingScreen: screenShareContext.startWatchingScreen,
-    stopWatchingScreen: screenShareContext.stopWatchingScreen,
+    joinVoiceChannel: mediaContext.joinVoiceChannel,
+    leaveVoiceChannel: mediaContext.leaveVoiceChannel,
+    isMuted: mediaContext.isMuted,
+    toggleMute: mediaContext.toggleMute,
+    muteVoiceChannel: mediaContext.muteVoiceChannel,
+    unmuteVoiceChannel: mediaContext.unmuteVoiceChannel,
+    isScreenSharing: mediaContext.isScreenSharing,
+    startScreenShare: mediaContext.startScreenShare,
+    stopScreenShare: mediaContext.stopScreenShare,
+    isWatchingScreen: mediaContext.isWatchingScreen,
+    screenVideoStream: mediaContext.screenVideoStream,
+    startWatchingScreen: mediaContext.startWatchingScreen,
+    stopWatchingScreen: mediaContext.stopWatchingScreen,
     auth: authContext.auth,
     login: authContext.login,
     logout: authContext.logout,
-    voiceChannelParticipants: voiceContext.voiceChannelParticipants,
-    currentRoomId: voiceContext.currentRoomId
+    voiceChannelParticipants: mediaContext.voiceChannelParticipants,
+    currentRoomId: mediaContext.currentRoomId
   }
 
   return (
@@ -118,7 +116,7 @@ const InnerProviders: React.FC<{ children: ReactNode }> = ({ children }) => {
   }, [])
 
   return (
-    <VoiceProvider 
+    <MediaProvider 
       currentUser={authContext.currentUser} 
       currentServerId={currentServerId}
     >
@@ -126,25 +124,20 @@ const InnerProviders: React.FC<{ children: ReactNode }> = ({ children }) => {
         currentChannelId={currentChannelId} 
         currentUser={authContext.currentUser}
       >
-        <ScreenShareProvider 
-          device={deviceRef} 
+        <AppProviderInner
+          servers={servers}
+          currentServerId={currentServerId}
+          currentChannelId={currentChannelId}
+          users={users}
+          setCurrentServer={setCurrentServer}
+          setCurrentChannel={setCurrentChannel}
+          deviceRef={deviceRef}
           sfuSocket={sfuSocket}
         >
-          <AppProviderInner
-            servers={servers}
-            currentServerId={currentServerId}
-            currentChannelId={currentChannelId}
-            users={users}
-            setCurrentServer={setCurrentServer}
-            setCurrentChannel={setCurrentChannel}
-            deviceRef={deviceRef}
-            sfuSocket={sfuSocket}
-          >
-            {children}
-          </AppProviderInner>
-        </ScreenShareProvider>
+          {children}
+        </AppProviderInner>
       </MessagingProvider>
-    </VoiceProvider>
+    </MediaProvider>
   )
 }
 

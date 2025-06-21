@@ -40,13 +40,14 @@ const DiscordApp: React.FC = () => {
   const currentChannel =
     currentServer?.channels.find((channel) => channel.id === currentChannelId) || null
 
-  // if (!auth.isAuthenticated) {
-  //   return (
-  //     <div className="discord-app login-mode">
-  //       <LoginScreen />
-  //     </div>
-  //   )
-  // }
+  console.log(auth.isAuthenticated)
+  if (!auth.isAuthenticated) {
+    return (
+      <div className="discord-app login-mode">
+        <LoginScreen />
+      </div>
+    )
+  }
 
   return (
     <div className="discord-app">

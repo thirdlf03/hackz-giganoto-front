@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react'
-import { v4 as uuidv4 } from 'uuid'
 import { AuthState, User } from '../types'
 
 interface AuthContextType {
@@ -34,48 +33,42 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null)
 
   const login = useCallback(async () => {
-    setAuth((prev) => ({ ...prev, isLoading: true, error: null }))
-
     try {
-      const result = await window.api.authenticateWithGitHub()
-
-      if (result.success && result.accessToken && result.githubUser) {
-        const githubUser: any = result.githubUser
-
-        const appUser: User = {
-          id: uuidv4(),
-          username: githubUser.name || githubUser.login,
-          avatar: githubUser.avatar_url,
-          status: 'online',
-          githubId: githubUser.id,
-          githubUsername: githubUser.login
-        }
-
-        setAuth({
-          isAuthenticated: true,
-          accessToken: result.accessToken,
-          isLoading: false,
-          error: null
-        })
-
-        setCurrentUser(appUser)
+      setAuth(prev => ({ ...prev, isLoading: true, error: null }))
+    
+      const isEncryptionAvailable = await window.api.safeStorage.isAvailable()
+      let storedToken: string
+      
+      if (isEncryptionAvailable) {
+        const oauthToken = 'temp-access-token'
+        storedToken = await window.api.safeStorage.encrypt(oauthToken)
       } else {
-        setAuth((prev) => ({
-          ...prev,
-          isLoading: false,
-          error: result.error || 'Authentication failed'
-        }))
+        const oauthToken = 'temp-access-token'
+        storedToken = oauthToken
       }
+
+
+      setAuth({
+        isAuthenticated: true,
+        accessToken: storedToken, 
+        isLoading: false,
+        error: null
+      })
+
     } catch (error) {
-      setAuth((prev) => ({
+      setAuth(prev => ({
         ...prev,
         isLoading: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'ログインに失敗しました'
       }))
     }
   }, [])
 
+
   const logout = useCallback(() => {
+    localStorage.removeItem('encryptedAccessToken')
+    localStorage.removeItem('accessToken')
+    
     setAuth({
       isAuthenticated: false,
       accessToken: null,

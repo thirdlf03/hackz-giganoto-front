@@ -5,7 +5,6 @@ import icon from '../../resources/icon.png?asset'
 import * as http from 'http'
 import * as url from 'url'
 
-// GitHub OAuth設定
 const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID || 'demo_client_id'
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET || 'demo_client_secret'
 const CUSTOM_PROTOCOL = 'discord-app'
@@ -302,6 +301,62 @@ app.whenReady().then(() => {
 
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
+
+  // GitHub OAuth認証のIPCハンドラー
+  ipcMain.handle('github-oauth', async () => {
+    try {
+      const code = await createAuthWindow()
+      const accessToken = await getAccessToken(code)
+      const user = await getGitHubUser(accessToken)
+      return { accessToken, user }
+    } catch (error) {
+      console.error('GitHub OAuth error:', error)
+      throw error
+    }
+  })
+
+  // safeStorageのIPCハンドラー
+  ipcMain.handle('safe-storage-encrypt', async (_, text: string) => {
+    try {
+      const { safeStorage } = await import('electron')
+      if (safeStorage.isEncryptionAvailable()) {
+        const encryptedBuffer = safeStorage.encryptString(text)
+        return encryptedBuffer.toString('base64')
+      } else {
+        // 暗号化が利用できない場合は元のテキストをそのまま返す（本番環境では適切な処理が必要）
+        return text
+      }
+    } catch (error) {
+      console.error('Encryption error:', error)
+      throw error
+    }
+  })
+
+  ipcMain.handle('safe-storage-decrypt', async (_, encryptedData: string) => {
+    try {
+      const { safeStorage } = await import('electron')
+      if (safeStorage.isEncryptionAvailable()) {
+        const buffer = Buffer.from(encryptedData, 'base64')
+        return safeStorage.decryptString(buffer)
+      } else {
+        // 暗号化が利用できない場合は元のデータをそのまま返す
+        return encryptedData
+      }
+    } catch (error) {
+      console.error('Decryption error:', error)
+      throw error
+    }
+  })
+
+  ipcMain.handle('safe-storage-available', async () => {
+    try {
+      const { safeStorage } = await import('electron')
+      return safeStorage.isEncryptionAvailable()
+    } catch (error) {
+      console.error('Safe storage check error:', error)
+      return false
+    }
+  })
 
   session.defaultSession.setDisplayMediaRequestHandler((request, callback) => {
     desktopCapturer.getSources({ types: ['screen'] }).then((sources) => {

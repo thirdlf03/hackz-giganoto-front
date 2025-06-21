@@ -2,11 +2,14 @@ import { ElectronAPI } from '@electron-toolkit/preload'
 
 interface API {
   authenticateWithGitHub: () => Promise<{
-    success: boolean
-    accessToken?: string
-    githubUser?: any
-    error?: string
+    accessToken: string
+    user: any
   }>
+  safeStorage: {
+    encrypt: (text: string) => Promise<string>
+    decrypt: (encryptedData: string) => Promise<string>
+    isAvailable: () => Promise<boolean>
+  }
 }
 
 declare global {

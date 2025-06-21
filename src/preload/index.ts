@@ -4,7 +4,14 @@ import { electronAPI } from '@electron-toolkit/preload'
 // Custom APIs for renderer
 const api = {
   // GitHub OAuth認証
-  authenticateWithGitHub: () => ipcRenderer.invoke('github-oauth')
+  authenticateWithGitHub: () => ipcRenderer.invoke('github-oauth'),
+  
+  // safeStorage関連API
+  safeStorage: {
+    encrypt: (text: string) => ipcRenderer.invoke('safe-storage-encrypt', text),
+    decrypt: (encryptedData: string) => ipcRenderer.invoke('safe-storage-decrypt', encryptedData),
+    isAvailable: () => ipcRenderer.invoke('safe-storage-available')
+  }
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to
