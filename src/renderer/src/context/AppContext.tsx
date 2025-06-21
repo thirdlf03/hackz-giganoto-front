@@ -41,8 +41,6 @@ const AppProviderInner: React.FC<AppProviderInnerProps> = ({
   users,
   setCurrentServer,
   setCurrentChannel,
-  deviceRef,
-  sfuSocket
 }) => {
   const authContext = useAuthContext()
   const mediaContext = useMediaContext()

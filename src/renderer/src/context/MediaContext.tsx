@@ -61,7 +61,7 @@ export const MediaProvider: React.FC<MediaProviderProps> = ({
   const [isListening, setIsListening] = useState<boolean>(false)
   const [voiceChannelParticipants, setVoiceChannelParticipants] = useState<Record<string, User[]>>({})
   const [currentRoomId, setCurrentRoomId] = useState<string | null>(null)
-  const [audioProducerId, setAudioProducerId] = useState<string | null>(null)
+  const [audioProducerId, _] = useState<string | null>(null)
 
   // Screen share state
   const [isScreenSharing, setIsScreenSharing] = useState<boolean>(false)

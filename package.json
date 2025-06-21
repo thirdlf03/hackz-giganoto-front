@@ -24,6 +24,7 @@
     "@electron-toolkit/preload": "^3.0.1",
     "@electron-toolkit/utils": "^4.0.0",
     "@types/uuid": "^10.0.0",
+    "axios": "^1.10.0",
     "date-fns": "^4.1.0",
     "mediasoup-client": "^3.11.0",
     "react-icons": "^5.5.0",

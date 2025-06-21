@@ -20,70 +20,6 @@ let authReject: ((reason?: any) => void) | null = null
 let localServer: http.Server | null = null
 
 
-function setupCustomProtocolHandler() {
-
-  if (!isDev) {
-
-    if (!app.isDefaultProtocolClient(CUSTOM_PROTOCOL)) {
-      app.setAsDefaultProtocolClient(CUSTOM_PROTOCOL)
-    }
-
-    // プロトコルURLの処理
-    app.on('open-url', (event, url) => {
-      event.preventDefault()
-      handleProtocolUrl(url)
-    })
-
-    // Windows/Linuxでのセカンドインスタンス処理
-    app.on('second-instance', (_, commandLine) => {
-      // コマンドライン引数からプロトコルURLを探す
-      const protocolUrl = commandLine.find(arg => arg.startsWith(`${CUSTOM_PROTOCOL}://`))
-      if (protocolUrl) {
-        handleProtocolUrl(protocolUrl)
-      }
-    })
-  }
-}
-
-// プロトコルURLの処理
-function handleProtocolUrl(url: string) {
-  console.log('Received protocol URL:', url)
-
-  const urlObj = new URL(url)
-  if (urlObj.pathname === '/oauth/callback') {
-    const code = urlObj.searchParams.get('code')
-    const error = urlObj.searchParams.get('error')
-
-    if (error) {
-      console.error('OAuth error:', error)
-      if (authReject) {
-        authReject(new Error(error))
-        authReject = null
-        authResolve = null
-      }
-    } else if (code) {
-      console.log('Received authorization code via protocol')
-      if (authResolve) {
-        authResolve(code)
-        authResolve = null
-        authReject = null
-      }
-    } else {
-      console.error('No code or error in callback URL')
-      if (authReject) {
-        authReject(new Error('No authorization code received'))
-        authReject = null
-        authResolve = null
-      }
-    }
-
-    // 認証ウィンドウを閉じる
-    if (authWindow) {
-      authWindow.close()
-      authWindow = null
-    }
-  }
-}
 
 // 開発用ローカルサーバーの起動
 function startLocalServer(): Promise<void> {
@@ -358,7 +294,40 @@ app.whenReady().then(() => {
     }
   })
 
-  session.defaultSession.setDisplayMediaRequestHandler((request, callback) => {
+  // 認証ウィンドウを開くIPCハンドラー
+  ipcMain.handle('open-auth-window', async (event, url: string) => {
+    try {
+      const parentWindow = BrowserWindow.fromWebContents(event.sender)
+      
+      const authWindow = new BrowserWindow({
+        width: 500,
+        height: 600,
+        parent: parentWindow || undefined,
+        modal: true,
+        show: true,
+        autoHideMenuBar: true,
+        webPreferences: {
+          nodeIntegration: false,
+          contextIsolation: true,
+          webSecurity: true
+        }
+      })
+
+      authWindow.loadURL(url)
+      
+      // ウィンドウが閉じられた時の処理
+      authWindow.on('closed', () => {
+        console.log('Auth window closed')
+      })
+
+      return authWindow.id
+    } catch (error) {
+      console.error('Error opening auth window:', error)
+      throw error
+    }
+  })
+
+  session.defaultSession.setDisplayMediaRequestHandler((_, callback) => {
     desktopCapturer.getSources({ types: ['screen'] }).then((sources) => {
       // Grant access to the first screen found.
       callback({ video: sources[0], audio: 'loopback' })

@@ -24,7 +24,9 @@ export const VoiceMembers: React.FC<VoiceMembersProps> = ({ participants, curren
           <div
             key={participant.id}
             className={`voice-member ${
+              // @ts-ignore
               participant.status === 'speaking' ? 'speaking' : ''
+              // @ts-ignore
             } ${participant.status === 'muted' ? 'muted' : ''}`}
           >
             <div className="member-avatar">
@@ -36,9 +38,13 @@ export const VoiceMembers: React.FC<VoiceMembersProps> = ({ participants, curren
                 </div>
               )}
                              <div className="member-status">
-                 {participant.status === 'muted' ? (
+                 {
+                 // @ts-ignore
+                 participant.status === 'muted' || participant.status === 'offline' ? (
                    <MdMicOff className="muted-icon" />
-                 ) : participant.status === 'speaking' ? (
+                 ) : 
+                 // @ts-ignore
+                 participant.status === 'speaking' ? (
                    <MdMic className="speaking-icon" />
                  ) : (
                    <MdMic className="idle-icon" />
