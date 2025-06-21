@@ -1,11 +1,11 @@
 import React from 'react'
-import { MdMic, MdMicOff, MdScreenShare, MdStopScreenShare, MdVisibility, MdVisibilityOff } from 'react-icons/md'
+import { MdMic, MdMicOff, MdScreenShare, MdStopScreenShare, MdVisibility, MdVisibilityOff, MdCallEnd } from 'react-icons/md'
 import { useAppContext } from '../../context/AppContext'
 
 export const VoiceStatus: React.FC = () => {
     const { isMuted, toggleMute } = useAppContext()
 
-    const { isScreenSharing, stopScreenShare, startScreenShare, isWatchingScreen, startWatchingScreen, stopWatchingScreen } = useAppContext()
+    const { isScreenSharing, stopScreenShare, startScreenShare, isWatchingScreen, startWatchingScreen, stopWatchingScreen, currentVoiceChannelId, leaveVoiceChannel } = useAppContext()
 
     return (
         <div className="voice-controls">
@@ -26,6 +26,15 @@ export const VoiceStatus: React.FC = () => {
             >
                 {isWatchingScreen ? <MdVisibilityOff /> : <MdVisibility />}
             </div>
+            {currentVoiceChannelId && (
+                <div 
+                    className="voice-status" 
+                    onClick={leaveVoiceChannel}
+                    title="通話から抜ける"
+                >
+                    <MdCallEnd />
+                </div>
+            )}
         </div>
     )
 }

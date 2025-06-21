@@ -1,0 +1,117 @@
+.voice-members {
+  padding: 12px;
+  border-top: 1px solid #40444b;
+  background-color: #2f3136;
+}
+
+.voice-members-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: #b9bbbe;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.voice-members-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.voice-member {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.15s ease;
+}
+
+.voice-member:hover {
+  background-color: #393c43;
+}
+
+.voice-member.speaking {
+  background-color: rgba(29, 185, 84, 0.1);
+  border-left: 3px solid #1db954;
+}
+
+.voice-member.muted {
+  opacity: 0.7;
+}
+
+.member-avatar {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.member-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.default-avatar {
+  width: 100%;
+  height: 100%;
+  background-color: #5865f2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+}
+
+.member-status {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background-color: #36393f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+}
+
+.speaking-icon {
+  color: #1db954;
+  animation: speaking-pulse 1s infinite;
+}
+
+.muted-icon {
+  color: #f04747;
+}
+
+.idle-icon {
+  color: #b9bbbe;
+}
+
+.member-name {
+  color: #dcddde;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@keyframes speaking-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+} 

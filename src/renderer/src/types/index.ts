@@ -65,14 +65,14 @@ export interface AppContextType extends AppState {
   sendMessage: (content: string) => void
   editMessage: (messageId: string, content: string) => void
   deleteMessage: (messageId: string) => void
-  joinVoiceChannel: (channelId: string) => void
+  joinVoiceChannel: (channelId: string) => Promise<void>
   leaveVoiceChannel: () => void
   isMuted: boolean
   toggleMute: () => void
   muteVoiceChannel: () => void
   unmuteVoiceChannel: () => void
   isScreenSharing: boolean
-  startScreenShare: () => void
+  startScreenShare: () => Promise<void>
   stopScreenShare: () => void
   isWatchingScreen: boolean
   screenVideoStream: MediaStream | null
@@ -81,4 +81,6 @@ export interface AppContextType extends AppState {
   auth: AuthState
   login: () => void
   logout: () => void
+  voiceChannelParticipants: Record<string, User[]>
+  currentRoomId: string | null
 }

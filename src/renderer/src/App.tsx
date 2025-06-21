@@ -7,6 +7,7 @@ import UserList from './components/UserList/UserList'
 import UserInfo from './components/UserInfo/UserInfo'
 import LoginScreen from './components/Auth/LoginScreen'
 import { ScreenViewer } from './components/ScreenViewer'
+import { VoiceMembers } from './components/VoiceMembers/VoiceMembers'
 import './styles/discord.css'
 
 const DiscordApp: React.FC = () => {
@@ -15,6 +16,7 @@ const DiscordApp: React.FC = () => {
     servers,
     currentServerId,
     currentChannelId,
+    currentVoiceChannelId,
     messages,
     users,
     currentUser,
@@ -27,8 +29,13 @@ const DiscordApp: React.FC = () => {
     stopScreenShare,
     isWatchingScreen,
     screenVideoStream,
-    stopWatchingScreen
+    stopWatchingScreen,
+    voiceChannelParticipants,
+    currentRoomId
   } = useAppContext()
+
+  // 現在のルームの参加者を取得
+  const voiceParticipants = currentRoomId && voiceChannelParticipants[currentRoomId] ? voiceChannelParticipants[currentRoomId] : []
 
 
 
@@ -53,6 +60,12 @@ const DiscordApp: React.FC = () => {
           startScreenShare={startScreenShare}
           stopScreenShare={stopScreenShare}
         />
+        {currentVoiceChannelId && (
+          <VoiceMembers 
+            participants={voiceParticipants}
+            currentRoomId={currentRoomId}
+          />
+        )}
         <UserInfo user={currentUser} />
       </div>
       <ChatArea channel={currentChannel} messages={messages} onSendMessage={sendMessage} />

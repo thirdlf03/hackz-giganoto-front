@@ -45,33 +45,33 @@ export const mockUsers: User[] = [
 
 export const mockServers: Server[] = [
   {
-    id: uuidv4(),
+    id: 'guild-12345', // 固定のサーバー(ギルド)ID
     name: 'メインサーバー',
     icon: undefined,
     channels: [
       {
-        id: uuidv4(),
+        id: 'channel-text-general',
         name: '一般',
         type: 'text',
         serverId: '',
         unreadCount: 3
       },
       {
-        id: uuidv4(),
+        id: 'channel-text-announcements',
         name: 'お知らせ',
         type: 'text',
         serverId: '',
         unreadCount: 0
       },
       {
-        id: uuidv4(),
+        id: 'channel-text-random',
         name: 'ランダム',
         type: 'text',
         serverId: '',
         unreadCount: 1
       },
       {
-        id: uuidv4(),
+        id: 'channel-voice-main', // 固定のボイスチャンネルID
         name: 'ボイスチャット',
         type: 'voice',
         serverId: ''
@@ -79,19 +79,19 @@ export const mockServers: Server[] = [
     ]
   },
   {
-    id: uuidv4(),
+    id: 'guild-67890', // 固定のサーバー(ギルド)ID
     name: 'ゲームサーバー',
     icon: undefined,
     channels: [
       {
-        id: uuidv4(),
+        id: 'channel-text-game',
         name: 'ゲーム雑談',
         type: 'text',
         serverId: '',
         unreadCount: 0
       },
       {
-        id: uuidv4(),
+        id: 'channel-voice-game', // 固定のボイスチャンネルID
         name: 'ゲーム実況',
         type: 'voice',
         serverId: ''
@@ -99,19 +99,19 @@ export const mockServers: Server[] = [
     ]
   },
   {
-    id: uuidv4(),
+    id: 'guild-111213', // 固定のサーバー(ギルド)ID
     name: '学習グループ',
     icon: undefined,
     channels: [
       {
-        id: uuidv4(),
+        id: 'channel-text-programming',
         name: 'プログラミング',
         type: 'text',
         serverId: '',
         unreadCount: 2
       },
       {
-        id: uuidv4(),
+        id: 'channel-voice-study', // 固定のボイスチャンネルID
         name: '勉強会',
         type: 'voice',
         serverId: ''

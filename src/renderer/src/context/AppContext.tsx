@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useRef } from 'react'
 import { v4 as uuidv4 } from 'uuid'
-import { AppContextType, Server, Message, User, AuthState, GitHubUser } from '../types'
+import { AppContextType, Server, Message, User, AuthState } from '../types'
 import { mockServers, mockMessages, mockUsers } from '../data/mockData'
 import { io } from 'socket.io-client'
 import * as mediasoupClient from 'mediasoup-client'
@@ -54,12 +54,18 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const screenConsumerRef = useRef<any>(null)
   const sfuSocket = useRef<ReturnType<typeof io> | null>(null)
   const [voiceChannelParticipants, setVoiceChannelParticipants] = useState<Record<string, User[]>>({})
+  const [currentRoomId, setCurrentRoomId] = useState<string | null>(null)
 
   const toggleMute = useCallback(() => {
     if (audioTrackRef.current) {
       audioTrackRef.current.enabled = !isMuted
     }
     setIsMuted((prev) => !prev)
+    
+    // サーバーにミュート状態を通知
+    if (sfuSocket.current) {
+      sfuSocket.current.emit('updateMuteState', { isMuted: !isMuted })
+    }
   }, [isMuted])
 
   const setCurrentServer = useCallback(
@@ -244,64 +250,83 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
   const joinVoiceChannel = useCallback(
     async (channelId: string) => {
-
       console.log(`Joining voice channel: ${channelId}`)
 
       try {
         if (!sfuSocket.current) {
           sfuSocket.current = io('http://localhost:3000')
-        }
-
-        if (!deviceRef.current) {
-          const device = await mediasoupClient.Device.factory()
-          deviceRef.current = device
-
-          sfuSocket.current.emit(
-            'getRouterRtpCapabilities',
-            async (routerRtpCapabilities: any) => {
-              if (!routerRtpCapabilities || routerRtpCapabilities.error) {
-                console.error('Failed to get Router RTP capabilities:', routerRtpCapabilities.error)
-                return
-              }
-
-              await device.load({ routerRtpCapabilities })
-              console.log('Device loaded with router RTP capabilities')
-              setIsVoiceConnected(true)
-
-              await startProducingAudio()
-              await startListeningAudio()
-
-              console.log('Current user:', currentUser)
-
-              if (currentUser) {
-                setVoiceChannelParticipants((prev) => ({
-                  ...prev,
-                  [channelId]: [...(prev[channelId] || []), currentUser]
-                }))
-              }
-
-              console.log('Voice channel participants:', voiceChannelParticipants)
-            }
-          )
-        } else if (deviceRef.current.loaded) {
-          setIsVoiceConnected(true)
-          await startProducingAudio()
-          await startListeningAudio()
-          if (currentUser) {
+          
+          // 参加者更新の受信
+          sfuSocket.current.on('room-participants-updated', ({ roomId, count, participants }) => {
+            console.log(`Room ${roomId} participants updated:`, count, participants)
             setVoiceChannelParticipants((prev) => ({
               ...prev,
-              [channelId]: [...(prev[channelId] || []), currentUser]
+              [roomId]: participants.map((p: any) => ({
+                id: p.socketId,
+                username: p.name, // nameからusernameに統一
+                avatar: p.avatar,
+                status: p.isMuted ? 'muted' : p.isSpeaking ? 'speaking' : 'online'
+              }))
             }))
-          }
-          console.log('Voice channel participants:', voiceChannelParticipants)
+          })
         }
 
-        setCurrentVoiceChannelId(channelId)
+                // 現在選択されているサーバーのIDを使用（固定値）
+        const serverId = currentServerId || 'guild-12345' // デフォルトは固定のギルドID
+        
+        console.log(`Joining voice channel: serverId=${serverId}, channelId=${channelId}`)
+        console.log('Current server ID:', currentServerId)
+        
+        // 新しいjoinVoiceChannelイベントを使用
+        sfuSocket.current.emit('joinVoiceChannel', {
+          serverId,
+          channelId,
+          userInfo: {
+            name: currentUser?.username || 'Unknown User',
+            avatar: currentUser?.avatar || null
+          }
+        }, async (response: any) => {
+          if (response.error) {
+            console.error('Failed to join voice channel:', response.error)
+            return
+          }
+
+          console.log('Successfully joined voice channel:', response.roomId)
+          setCurrentRoomId(response.roomId)
+
+          // 既存の参加者情報がある場合は即座に反映
+          if (response.existingParticipants && response.existingParticipants.length > 0) {
+            setVoiceChannelParticipants((prev) => ({
+              ...prev,
+              [response.roomId]: response.existingParticipants.map((p: any) => ({
+                id: p.socketId,
+                username: p.name,
+                avatar: p.avatar,
+                status: p.isMuted ? 'muted' : p.isSpeaking ? 'speaking' : 'online'
+              }))
+            }))
+            console.log(`Loaded ${response.existingParticipants.length} existing participants`)
+          }
+
+          if (!deviceRef.current) {
+            const device = await mediasoupClient.Device.factory()
+            deviceRef.current = device
+            await device.load({ routerRtpCapabilities: response.rtpCapabilities })
+            console.log('Device loaded with router RTP capabilities')
+          }
+
+          setIsVoiceConnected(true)
+          setCurrentVoiceChannelId(channelId)
+
+          await startProducingAudio()
+          await startListeningAudio()
+        })
+
       } catch (error) {
         console.error('Error joining voice channel:', error)
       }
     },
-    [currentUser]
+    [currentUser, currentServerId]
   )
 
   const muteVoiceChannel = useCallback(() => {
@@ -562,7 +587,16 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       setIsListening(false)
     }
 
+    // 新しいサーバーAPIを使用してボイスチャンネルを退出
     if (sfuSocket.current) {
+      sfuSocket.current.emit('leaveVoiceChannel', (response: any) => {
+        if (response.success) {
+          console.log('Successfully left voice channel')
+        } else {
+          console.error('Error leaving voice channel:', response.error)
+        }
+      })
+      
       sfuSocket.current.disconnect()
       sfuSocket.current = null
     }
@@ -584,22 +618,13 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       stopWatchingScreen()
     }
 
-    if (currentVoiceChannelId && currentUser) {
-      setVoiceChannelParticipants((prev) => {
-        const newParticipants = { ...prev }
-        const participants = newParticipants[currentVoiceChannelId]
-        if (participants) {
-          newParticipants[currentVoiceChannelId] = participants.filter(
-            (user) => user.id !== currentUser.id
-          )
-        }
-        return newParticipants
-      })
-    }
-
     setIsVoiceConnected(false)
     setCurrentVoiceChannelId(null)
-  }, [currentVoiceChannelId, currentUser])
+    setCurrentRoomId(null)
+    
+    // ローカル状態もクリア
+    setVoiceChannelParticipants({})
+  }, [isScreenSharing, isWatchingScreen])
 
   const sendMessage = useCallback(
     (content: string) => {
@@ -647,7 +672,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       const result = await window.api.authenticateWithGitHub()
 
       if (result.success && result.accessToken && result.githubUser) {
-        const githubUser: GitHubUser = result.githubUser
+        const githubUser: any = result.githubUser
 
         // GitHubユーザー情報からアプリのユーザーを作成
         const appUser: User = {
@@ -695,7 +720,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     setAuth({
       isAuthenticated: false,
       accessToken: null,
-      githubUser: null,
       isLoading: false,
       error: null
     })
@@ -733,7 +757,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     stopWatchingScreen,
     auth,
     login,
-    logout
+    logout,
+    voiceChannelParticipants,
+    currentRoomId
   }
 
   return (
