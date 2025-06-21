@@ -38,6 +38,70 @@ body {
   overflow: hidden;
 }
 
+/* Screen Viewer Styles */
+.screen-viewer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.screen-viewer-container {
+  background-color: var(--discord-background-secondary);
+  border-radius: 8px;
+  padding: 16px;
+  width: 90vw;
+  height: 90vh;
+  max-width: 1200px;
+  max-height: 800px;
+  display: flex;
+  flex-direction: column;
+}
+
+.screen-viewer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.screen-viewer-header h3 {
+  color: var(--discord-text-normal);
+  margin: 0;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: var(--discord-text-muted);
+  font-size: 24px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.close-button:hover {
+  background-color: var(--discord-hover);
+  color: var(--discord-text-normal);
+}
+
+.screen-viewer-video {
+  width: 100%;
+  height: calc(100% - 60px);
+  border-radius: 4px;
+  background-color: #000;
+  object-fit: contain;
+}
+
 .discord-app {
   display: flex;
   height: 100vh;
@@ -195,19 +259,31 @@ body {
   border-radius: 50%;
 }
 
+.voice-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 .voice-status {
   bottom: -2px;
   right: -2px;
   background-color: var(--discord-background-secondary);
-  padding: 2px;
+  padding: 8px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 4px;
+  width: 32px;
+  height: 32px;
+  font-size: 16px;
+  transition: background-color 0.2s ease;
 }
 
 .voice-status:hover {
-  opacity: 0.8;
+  background-color: var(--discord-background-accent);
+  opacity: 0.9;
 }
 
 .user-details {

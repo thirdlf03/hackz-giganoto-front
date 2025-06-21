@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, session, desktopCapturer } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -14,17 +14,17 @@ const REDIRECT_URI = isDev
   ? 'http://localhost:5174/oauth/callback'
   : `${CUSTOM_PROTOCOL}://oauth/callback`
 
-// OAuth認証状態管理
+
 let authWindow: BrowserWindow | null = null
 let authResolve: ((value: string) => void) | null = null
 let authReject: ((reason?: any) => void) | null = null
 let localServer: http.Server | null = null
 
-// カスタムプロトコルハンドラーの設定（本番用）
+
 function setupCustomProtocolHandler() {
-  // 本番環境でのみカスタムプロトコルを設定
+
   if (!isDev) {
-    // カスタムプロトコルをデフォルトとして設定
+
     if (!app.isDefaultProtocolClient(CUSTOM_PROTOCOL)) {
       app.setAsDefaultProtocolClient(CUSTOM_PROTOCOL)
     }
@@ -303,39 +303,16 @@ app.whenReady().then(() => {
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
 
-  // GitHub OAuth認証
-  ipcMain.handle('github-oauth', async () => {
-    try {
-      console.log('Starting GitHub OAuth flow...')
-
-      // 認証ウィンドウを開いて認証コードを取得
-      console.log('Creating auth window...')
-      const code = await createAuthWindow()
-      console.log('Received authorization code:', code.substring(0, 10) + '...')
-
-      // 認証コードでアクセストークンを取得
-      console.log('Getting access token...')
-      const accessToken = await getAccessToken(code)
-      console.log('Received access token:', accessToken.substring(0, 10) + '...')
-
-      // アクセストークンでユーザー情報を取得
-      console.log('Getting user info...')
-      const githubUser = await getGitHubUser(accessToken)
-      console.log('Received user info:', githubUser.login)
-
-      return {
-        success: true,
-        accessToken,
-        githubUser
-      }
-    } catch (error) {
-      console.error('OAuth error:', error)
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      }
-    }
-  })
+  session.defaultSession.setDisplayMediaRequestHandler((request, callback) => {
+    desktopCapturer.getSources({ types: ['screen'] }).then((sources) => {
+      // Grant access to the first screen found.
+      callback({ video: sources[0], audio: 'loopback' })
+    })
+    // If true, use the system picker if available.
+    // Note: this is currently experimental. If the system picker
+    // is available, it will be used and the media request handler
+    // will not be invoked.
+  }, { useSystemPicker: true })
 
   createWindow()
 

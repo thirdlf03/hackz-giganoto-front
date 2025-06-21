@@ -47,23 +47,14 @@ export interface AppState {
   servers: Server[]
   currentServerId: string | null
   currentChannelId: string | null
+  currentVoiceChannelId: string | null
   messages: Message[]
   users: User[]
-}
-
-export interface GitHubUser {
-  id: number
-  login: string
-  avatar_url: string
-  name: string | null
-  email: string | null
-  bio: string | null
 }
 
 export interface AuthState {
   isAuthenticated: boolean
   accessToken: string | null
-  githubUser: GitHubUser | null
   isLoading: boolean
   error: string | null
 }
@@ -74,9 +65,19 @@ export interface AppContextType extends AppState {
   sendMessage: (content: string) => void
   editMessage: (messageId: string, content: string) => void
   deleteMessage: (messageId: string) => void
+  joinVoiceChannel: (channelId: string) => void
+  leaveVoiceChannel: () => void
   isMuted: boolean
   toggleMute: () => void
-  // 認証関連
+  muteVoiceChannel: () => void
+  unmuteVoiceChannel: () => void
+  isScreenSharing: boolean
+  startScreenShare: () => void
+  stopScreenShare: () => void
+  isWatchingScreen: boolean
+  screenVideoStream: MediaStream | null
+  startWatchingScreen: () => void
+  stopWatchingScreen: () => void
   auth: AuthState
   login: () => void
   logout: () => void

@@ -6,9 +6,13 @@ interface ChannelListProps {
   server: Server | null
   currentChannelId: string | null
   onChannelSelect: (channelId: string) => void
+  voiceChannelSelect: (channelId: string) => void
+  isScreenSharing: boolean
+  startScreenShare: () => Promise<void>
+  stopScreenShare: () => void
 }
 
-const ChannelList: React.FC<ChannelListProps> = ({ server, currentChannelId, onChannelSelect }) => {
+const ChannelList: React.FC<ChannelListProps> = ({ server, currentChannelId, onChannelSelect, voiceChannelSelect, isScreenSharing, startScreenShare, stopScreenShare }) => {
   if (!server) {
     return (
       <div className="channel-list">
@@ -50,7 +54,7 @@ const ChannelList: React.FC<ChannelListProps> = ({ server, currentChannelId, onC
             <div
               key={channel.id}
               className={`channel-item ${currentChannelId === channel.id ? 'active' : ''}`}
-              onClick={() => onChannelSelect(channel.id)}
+              onClick={() => voiceChannelSelect(channel.id)}
             >
               <MdVolumeUp className="channel-icon" />
               <span className="channel-name">{channel.name}</span>
@@ -58,6 +62,7 @@ const ChannelList: React.FC<ChannelListProps> = ({ server, currentChannelId, onC
           ))}
         </>
       )}
+
     </div>
   )
 }

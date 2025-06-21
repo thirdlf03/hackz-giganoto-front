@@ -6,6 +6,7 @@ import ChatArea from './components/Chat/ChatArea'
 import UserList from './components/UserList/UserList'
 import UserInfo from './components/UserInfo/UserInfo'
 import LoginScreen from './components/Auth/LoginScreen'
+import { ScreenViewer } from './components/ScreenViewer'
 import './styles/discord.css'
 
 const DiscordApp: React.FC = () => {
@@ -19,7 +20,14 @@ const DiscordApp: React.FC = () => {
     currentUser,
     setCurrentServer,
     setCurrentChannel,
-    sendMessage
+    sendMessage,
+    joinVoiceChannel,
+    isScreenSharing,
+    startScreenShare,
+    stopScreenShare,
+    isWatchingScreen,
+    screenVideoStream,
+    stopWatchingScreen
   } = useAppContext()
 
 
@@ -40,11 +48,20 @@ const DiscordApp: React.FC = () => {
           server={currentServer}
           currentChannelId={currentChannelId}
           onChannelSelect={setCurrentChannel}
+          voiceChannelSelect={joinVoiceChannel}
+          isScreenSharing={isScreenSharing}
+          startScreenShare={startScreenShare}
+          stopScreenShare={stopScreenShare}
         />
         <UserInfo user={currentUser} />
       </div>
       <ChatArea channel={currentChannel} messages={messages} onSendMessage={sendMessage} />
       <UserList users={users} />
+      <ScreenViewer 
+        isVisible={isWatchingScreen}
+        videoStream={screenVideoStream}
+        onClose={stopWatchingScreen}
+      />
     </div>
   )
 }
