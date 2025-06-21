@@ -34,14 +34,19 @@ const DiscordApp: React.FC = () => {
     currentRoomId
   } = useAppContext()
 
-  // 現在のルームの参加者を取得
   const voiceParticipants = currentRoomId && voiceChannelParticipants[currentRoomId] ? voiceChannelParticipants[currentRoomId] : []
-
-
 
   const currentServer = servers.find((server) => server.id === currentServerId) || null
   const currentChannel =
     currentServer?.channels.find((channel) => channel.id === currentChannelId) || null
+
+  // if (!auth.isAuthenticated) {
+  //   return (
+  //     <div className="discord-app login-mode">
+  //       <LoginScreen />
+  //     </div>
+  //   )
+  // }
 
   return (
     <div className="discord-app">

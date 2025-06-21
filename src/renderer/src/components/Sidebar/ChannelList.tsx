@@ -1,5 +1,6 @@
 import React from 'react'
 import { MdTag, MdVolumeUp } from 'react-icons/md'
+import { FaGithub } from 'react-icons/fa'
 import { Server } from '../../types'
 
 interface ChannelListProps {
@@ -62,6 +63,12 @@ const ChannelList: React.FC<ChannelListProps> = ({ server, currentChannelId, onC
           ))}
         </>
       )}
+
+      <div className="channel-category">GitHub関係チャンネル</div>
+      <div className="channel-item">
+        <FaGithub className="channel-icon" />
+        <span className="channel-name">GitHub</span>
+      </div>
 
     </div>
   )

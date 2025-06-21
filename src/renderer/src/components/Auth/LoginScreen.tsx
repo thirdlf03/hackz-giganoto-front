@@ -9,7 +9,7 @@ const LoginScreen: React.FC = () => {
     <div className="login-screen">
       <div className="login-container">
         <div className="login-header">
-          <h1>Discord風チャット</h1>
+          <h1>ハックツール</h1>
           <p>GitHubアカウントでログインして始めましょう</p>
         </div>
 
